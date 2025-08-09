@@ -35,11 +35,26 @@ class AttendanceTest {
         val response = attendanceResource.checkIn("E001", request)
         assertEquals(Response.Status.CREATED.statusCode, response.status)
     }
-    fun `checkIn with invalid data returns CREATED and stores attendance`() {
-        val request = CheckInRequest(LocalDateTime.of(2025, 8, 8, 9, 0))
-        val response = attendanceResource.checkIn("E001", request)
-        assertEquals(Response.Status.CREATED.statusCode, response.status)
+    @Test
+    fun `checkIn followed by checkout using invalid checkout time`() {
+        val requestCheckin = CheckInRequest(LocalDateTime.of(2025, 8, 8, 9, 0))
+        attendanceResource.checkIn("E001", requestCheckin)
+
+        val checkOutTime = LocalDateTime.of(2025, 8, 7, 17, 30) // Before check-in
+        val requestCheckout = CheckOutRequest(checkOutTime)
+        val response = attendanceResource.checkOut("E001", requestCheckout)
+
+        assertEquals(Response.Status.BAD_REQUEST.statusCode, response.status)
+
+        val entity = response.entity as Map<*, *>
+
+        val errorMessage = entity["error"] as? String ?: "No error message"
+
+        println("Error message from entity: '$errorMessage'") // Debug print
+
+        assertEquals("Checkout time cannot be before checkin time", errorMessage)
     }
+
     @Test
     fun `checkOut with valid data returns OK and updates attendance`() {
         val employeeId = "E002"
@@ -52,8 +67,6 @@ class AttendanceTest {
         val response = attendanceResource.checkOut(employeeId, request)
         assertEquals(Response.Status.OK.statusCode, response.status)
     }
-
-    // Add more tests for edge cases, error handling...
 }
 
 
