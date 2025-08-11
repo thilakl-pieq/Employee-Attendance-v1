@@ -21,18 +21,16 @@ dependencies {
     // Jackson JavaTimeModule for Java 8 date/time types support
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0")
 
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     // Dropwizard core
-    implementation("io.dropwizard:dropwizard-core:1.3.29")
+    implementation("io.dropwizard:dropwizard-core:4.0.15")
+    implementation("io.dropwizard:dropwizard-client:4.0.15")
 
     // Kotlin stdlib
     implementation(kotlin("stdlib"))
 
     // kotlinx.serialization core library (if you plan to use it fully)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
-
-    // Optional: Jackson XML support if needed
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.18.0")
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")

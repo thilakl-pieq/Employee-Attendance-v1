@@ -1,15 +1,12 @@
 package config
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.dropwizard.Configuration
+import io.dropwizard.core.Configuration
 
-class Configuration : Configuration() {
-
-//    @NotEmpty
+class Configuration : Configuration() {  // Notice the fully qualified import ensures you extend the Dropwizard class
     @JsonProperty
-    var template: String = "Hello, %s!"
+    lateinit var template: String
 
-//    @NotEmpty
     @JsonProperty
-    var defaultName: String = "Stranger"
+    lateinit var defaultName: String
 }

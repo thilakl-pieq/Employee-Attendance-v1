@@ -1,5 +1,7 @@
 package dao
 
+import service.Attendance
+import java.time.Duration
 import java.time.LocalDateTime
 
 class AttendanceList : ArrayList<Attendance>() {
@@ -15,10 +17,6 @@ class AttendanceList : ArrayList<Attendance>() {
         return this.any { it.id == id && it.checkInDateTime.toLocalDate() == date.toLocalDate() }
     }
 
-//    fun hasAlreadyCheckedOut(id: String, date: LocalDateTime): Boolean {
-//        return this.any { it.id == id && it.checkOutDateTime?.toLocalDate() == date.toLocalDate() }
-//    }
-
     fun addCheckOutToList(attendance: Attendance, checkOut: LocalDateTime): Pair<Boolean, String> {
         val index = this.indexOfFirst { it.id == attendance.id && it.checkOutDateTime == null }
 
@@ -26,18 +24,25 @@ class AttendanceList : ArrayList<Attendance>() {
             return false to "No open attendance to update for ID ${attendance.id}"
         }
 
-        val (success, msg) = attendance.addCheckOutTimeToAttendance(checkOut)
-        if (success) {
-            this[index] = attendance
+        // Moved logic from Attendance.addCheckOutTimeToAttendance here:
+        if (checkOut.isBefore(attendance.checkInDateTime)) {
+            return false to "Checkout time cannot be before checkin time"
         }
-        return success to msg
+        if (checkOut.toLocalDate() != attendance.checkInDateTime.toLocalDate()) {
+            return false to "Check-out must be on the same date as check-in."
+        }
+
+        attendance.checkOutDateTime = checkOut
+
+        val duration = Duration.between(attendance.checkInDateTime, checkOut)
+        val hours = duration.toHours()
+        val minutes = duration.toMinutes() % 60
+        val seconds = duration.seconds % 60
+        attendance.workingHours = "%02d:%02d:%02d".format(hours, minutes, seconds)
+
+        this[index] = attendance
+        return true to "Check-out successful"
     }
-
-
-
-//    fun delete(id: String, checkInDateTime: LocalDateTime): Boolean {
-//        return this.removeIf { it.id == id && it.checkInDateTime == checkInDateTime }
-//    }
 
     fun getActiveAttendances(): List<Attendance> {
         return this.filter { it.checkOutDateTime == null }
@@ -71,4 +76,3 @@ class AttendanceList : ArrayList<Attendance>() {
         return this.joinToString("\n") { it.toString() }
     }
 }
-

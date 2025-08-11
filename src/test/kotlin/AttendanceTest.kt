@@ -5,28 +5,49 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import api.CheckInRequest
 import api.CheckOutRequest
 import dao.AttendanceList
-import dao.Attendance
+import service.Attendance
+import service.AttendanceService
 import resources.AttendanceResource
 import org.junit.jupiter.api.BeforeEach
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
+import jakarta.ws.rs.client.Client
+import jakarta.ws.rs.client.Invocation
+import jakarta.ws.rs.client.WebTarget
+import org.mockito.Mockito.*
 
 class AttendanceTest {
 
-    val employee = Employee("John", "Doe", Role.DEVELOPER, "Engineering", "AS002")
+    private val employee = Employee("John", "Doe", Role.DEVELOPER, "Engineering", "AS002")
 
     private lateinit var attendanceList: AttendanceList
     private lateinit var attendanceResource: AttendanceResource
+    private lateinit var mockClient: Client
 
     @BeforeEach
     fun setup() {
         attendanceList = AttendanceList()
-        attendanceResource = AttendanceResource(attendanceList)
+
+        // Mock HTTP client so employeeExists() always returns true
+        mockClient = mock(Client::class.java)
+        val mockTarget = mock(WebTarget::class.java)
+        val mockRequest = mock(Invocation.Builder::class.java)
+        val mockResponse = mock(jakarta.ws.rs.core.Response::class.java)
+
+        `when`(mockClient.target(anyString())).thenReturn(mockTarget)
+        `when`(mockTarget.request()).thenReturn(mockRequest)
+        `when`(mockRequest.get()).thenReturn(mockResponse)
+        `when`(mockResponse.status).thenReturn(200) // Always "employee exists"
+
+        // Build the service and resource
+        val attendanceService = AttendanceService(attendanceList, mockClient)
+        attendanceResource = AttendanceResource(attendanceService)
     }
+
     @Test
     fun `test Employee Creation`() {
         val result = employee.isValid()
-        assertEquals(true,result)
+        assertEquals(true, result)
     }
 
     @Test
@@ -35,6 +56,7 @@ class AttendanceTest {
         val response = attendanceResource.checkIn("E001", request)
         assertEquals(Response.Status.CREATED.statusCode, response.status)
     }
+
     @Test
     fun `checkIn followed by checkout using invalid checkout time`() {
         val requestCheckin = CheckInRequest(LocalDateTime.of(2025, 8, 8, 9, 0))
@@ -47,11 +69,9 @@ class AttendanceTest {
         assertEquals(Response.Status.BAD_REQUEST.statusCode, response.status)
 
         val entity = response.entity as Map<*, *>
-
         val errorMessage = entity["error"] as? String ?: "No error message"
 
-        println("Error message from entity: '$errorMessage'") // Debug print
-
+        println("Error message from entity: '$errorMessage'")
         assertEquals("Checkout time cannot be before checkin time", errorMessage)
     }
 
@@ -68,5 +88,3 @@ class AttendanceTest {
         assertEquals(Response.Status.OK.statusCode, response.status)
     }
 }
-
-

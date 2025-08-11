@@ -11,6 +11,6 @@ data class CheckInRequest(
 
 data class CheckOutRequest(
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    val checkOutDateTime: LocalDateTime?
+    val checkOutDateTime: LocalDateTime
 )
 

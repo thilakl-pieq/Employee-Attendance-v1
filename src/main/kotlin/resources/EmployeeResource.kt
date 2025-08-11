@@ -1,17 +1,16 @@
 package resources
 
 import api.EmployeeRequest
-import dao.EmployeeList
-import dao.Employee
 import dao.Role
-import javax.ws.rs.*
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import service.EmployeeService
 
 @Path("/employees")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-class EmployeeResource(private val employeeList: EmployeeList) {
+class EmployeeResource(private val employeeService: EmployeeService) {
 
     @POST
     fun addEmployee(request: EmployeeRequest): Response {
@@ -22,7 +21,8 @@ class EmployeeResource(private val employeeList: EmployeeList) {
                 .entity(mapOf("error" to "Invalid role value")).build()
         }
 
-        val emp = Employee(
+        // Delegate to the service layer
+        val (status, body) = employeeService.addEmployee(
             firstName = request.firstname.trim(),
             lastName = request.lastname.trim(),
             role = roleEnum,
@@ -30,20 +30,26 @@ class EmployeeResource(private val employeeList: EmployeeList) {
             reportingTo = request.reportingto?.trim()
         )
 
-        if (!emp.isValid()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Employee validation failed")).build()
-        }
-
-//        if (employeeList.any { it.id == emp.id }) {
-//            return Response.status(Response.Status.CONFLICT)
-//                .entity(mapOf("error" to "Employee with this ID already exists")).build()
-//        }
-
-        employeeList.add(emp)
-        return Response.status(Response.Status.CREATED).entity(emp).build()
+        return Response.status(status).entity(body).build()
     }
-    @GET
-    fun listEmployees(): List<Employee> = employeeList
 
+    @GET
+    @Path("/{id}")
+    fun getEmployeeById(@PathParam("id") id: String): Response {
+        val (status, body) = employeeService.getEmployee(id)
+        return Response.status(status).entity(body).build()
+    }
+
+    @GET
+    fun listEmployees(@QueryParam("limit") @DefaultValue("20") limit: Int): Response {
+        val employees = employeeService.getAllEmployees(limit)
+        return Response.ok(employees).build()
+    }
+
+    @DELETE
+    @Path("/{id}")
+    fun deleteEmployee(@PathParam("id") id: String): Response {
+        val (status, body) = employeeService.deleteEmployee(id)
+        return Response.status(status).entity(body).build()
+    }
 }
