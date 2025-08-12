@@ -37,7 +37,8 @@ class AttendanceResource(
     fun getAllAttendance(@QueryParam("to") to: LocalDateTime,
                          @QueryParam("from") from:LocalDateTime?,
                          @QueryParam("limit") @DefaultValue("20") limit: Int): Response {
-        val list = attendanceService.getAllAttendances().take(limit)
-        return Response.ok(list).build()
+
+
+
     }
 }

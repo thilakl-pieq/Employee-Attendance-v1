@@ -59,6 +59,7 @@ class AttendanceService(
 
     fun getAttendanceBySummary(from: LocalDateTime,to: LocalDateTime) {
 
+        val attendanceSummary =
 
     }
 
