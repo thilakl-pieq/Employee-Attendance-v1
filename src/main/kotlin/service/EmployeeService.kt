@@ -17,20 +17,16 @@ class EmployeeService(
         reportingTo: String?
     ): Pair<Response.Status, Any> {
 
-        // Validation: All required fields
         if (firstName.isBlank() || lastName.isBlank() || department.isBlank()) {
             return Response.Status.BAD_REQUEST to mapOf("error" to "First name, last name and department cannot be empty")
         }
 
-        // Build Employee object
         val employee = Employee(firstName, lastName, role, department, reportingTo)
 
-        // Validate with Employee.isValid()
         if (!employee.isValid()) {
             return Response.Status.BAD_REQUEST to mapOf("error" to "Invalid employee data")
         }
 
-        // Try to add to employee list
         if (!employeeList.add(employee)) {
             return Response.Status.CONFLICT to mapOf("error" to "Employee already exists or data is invalid")
         }

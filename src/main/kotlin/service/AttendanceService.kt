@@ -57,5 +57,10 @@ class AttendanceService(
         }
     }
 
+    fun getAttendanceBySummary(from: LocalDateTime,to: LocalDateTime) {
+
+
+    }
+
     fun getAllAttendances(): List<Attendance> = attendanceList
 }

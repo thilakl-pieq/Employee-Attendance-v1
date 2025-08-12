@@ -1,10 +1,11 @@
 package resources
 
-import api.CheckInRequest
-import api.CheckOutRequest
+import model.CheckInRequest
+import model.CheckOutRequest
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Response
 import service.AttendanceService
+import java.time.LocalDateTime
 
 @Path("/attendance")
 class AttendanceResource(
@@ -27,6 +28,15 @@ class AttendanceResource(
     @GET
     @Path("/all")
     fun getAllAttendance(@QueryParam("limit") @DefaultValue("20") limit: Int): Response {
+        val list = attendanceService.getAllAttendances().take(limit)
+        return Response.ok(list).build()
+    }
+
+    @GET
+    @Path("/summary")
+    fun getAllAttendance(@QueryParam("to") to: LocalDateTime,
+                         @QueryParam("from") from:LocalDateTime?,
+                         @QueryParam("limit") @DefaultValue("20") limit: Int): Response {
         val list = attendanceService.getAllAttendances().take(limit)
         return Response.ok(list).build()
     }

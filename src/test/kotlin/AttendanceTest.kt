@@ -2,8 +2,8 @@ import dao.Employee
 import dao.Role
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
-import api.CheckInRequest
-import api.CheckOutRequest
+import model.CheckInRequest
+import model.CheckOutRequest
 import dao.AttendanceList
 import service.Attendance
 import service.AttendanceService
@@ -18,7 +18,7 @@ import org.mockito.Mockito.*
 
 class AttendanceTest {
 
-    private val employee = Employee("John", "Doe", Role.DEVELOPER, "Engineering", "AS002")
+
 
     private lateinit var attendanceList: AttendanceList
     private lateinit var attendanceResource: AttendanceResource
@@ -37,7 +37,7 @@ class AttendanceTest {
         `when`(mockClient.target(anyString())).thenReturn(mockTarget)
         `when`(mockTarget.request()).thenReturn(mockRequest)
         `when`(mockRequest.get()).thenReturn(mockResponse)
-        `when`(mockResponse.status).thenReturn(200) // Always "employee exists"
+        `when`(mockResponse.status).thenReturn(200)
 
         // Build the service and resource
         val attendanceService = AttendanceService(attendanceList, mockClient)
@@ -46,6 +46,7 @@ class AttendanceTest {
 
     @Test
     fun `test Employee Creation`() {
+        val employee = Employee("John", "Doe", Role.DEVELOPER, "Engineering", "AS002")
         val result = employee.isValid()
         assertEquals(true, result)
     }

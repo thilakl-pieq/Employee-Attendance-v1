@@ -1,4 +1,4 @@
-package api
+package model
 
 data class EmployeeRequest(
     val firstname: String,

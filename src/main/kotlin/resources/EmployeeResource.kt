@@ -1,6 +1,6 @@
 package resources
 
-import api.EmployeeRequest
+import model.EmployeeRequest
 import dao.Role
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.MediaType
