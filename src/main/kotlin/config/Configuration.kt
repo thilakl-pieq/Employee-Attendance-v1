@@ -9,4 +9,6 @@ class Configuration : Configuration() {  // Notice the fully qualified import en
 
     @JsonProperty
     lateinit var defaultName: String
+
+
 }

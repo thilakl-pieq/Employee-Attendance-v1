@@ -15,6 +15,23 @@ repositories {
 }
 
 dependencies {
+    dependencies {
+        // Core JDBI library - lightweight abstraction on top of JDBC
+        implementation("org.jdbi:jdbi3-core:3.45.1")
+
+        // JDBI SQL Object extension - allows defining DAO interfaces with @SqlQuery, @SqlUpdate annotations
+        implementation("org.jdbi:jdbi3-sqlobject:3.45.1")
+
+        // JDBI Kotlin extension - adds Kotlin-friendly APIs (e.g., extension functions, better null handling)
+        implementation("org.jdbi:jdbi3-kotlin:3.45.1")
+
+        // HikariCP - high-performance JDBC connection pool (commonly used with JDBI and Spring)
+        implementation("com.zaxxer:HikariCP:5.1.0")
+
+        // PostgreSQL JDBC driver - required to connect to a PostgreSQL database
+        implementation("org.postgresql:postgresql:42.7.2")
+    }
+
     // Jackson Kotlin module for JSON serialization
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
 

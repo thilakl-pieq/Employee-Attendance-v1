@@ -4,10 +4,17 @@ defaultName: Dropwizard
 server:
   applicationConnectors:
     - type: http
-      port: 8080
+      port: 8081
   adminConnectors:
     - type: http
-      port: 8081
+      port: 8082
+
+database:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: postgres
+  url: jdbc:postgresql://localhost:5432/local_db
+
 
 logging:
   level: INFO
