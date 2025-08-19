@@ -3,41 +3,57 @@ package dao
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import java.util.UUID
 
 data class Employee(
 
-    @get:NotBlank(message = "First name cannot be blank")
-    @get:Size(max = 100, message = "First name must not exceed 100 characters")
-    @JsonProperty("firstName")
+    @JsonProperty("employee_id")
+    val employeeId: UUID = UUID.randomUUID(),
+
+    @get:NotBlank
+    @get:Size(max = 100)
+    @JsonProperty("first_name")
     val firstName: String,
 
-    @get:NotBlank(message = "Last name cannot be blank")
-    @get:Size(max = 100, message = "Last name must not exceed 100 characters")
-    @JsonProperty("lastName")
+    @get:NotBlank
+    @get:Size(max = 100)
+    @JsonProperty("last_name")
     val lastName: String,
 
-    @get:NotBlank(message = "Role cannot be blank")
-    @JsonProperty("role")
-    val role: Role,
+    @JsonProperty("role_id")
+    val roleId: Int,
 
-    @get:NotBlank(message = "Department cannot be blank")
-    @get:Size(max = 100, message = "Department name must not exceed 100 characters")
-    @JsonProperty("department")
-    val department: String,
+    @JsonProperty("department_id")
+    val departmentId: Int,
 
-    @JsonProperty("reportingTo")
+    @JsonProperty("reporting_to")
     val reportingTo: String? = null
-
 ) {
-    @JsonProperty("id")
-    val id: String = generateId(firstName, lastName)
+
+    override fun toString(): String {
+        return "Employee(employeeId=$employeeId, firstName='$firstName', lastName='$lastName', roleId=$roleId, departmentId=$departmentId, reportingTo=$reportingTo)"
+    }
+}
+
+enum class Role(val id: Int) {
+    CEO(1),
+    MANAGER(2),
+    DEVELOPER(3);
 
     companion object {
-        private var counter = 1
-        fun generateId(firstName: String, lastName: String): String {
-            val first = firstName.trim().firstOrNull()?.uppercaseChar() ?: 'X'
-            val last = lastName.trim().lastOrNull()?.uppercaseChar() ?: 'Y'
-            return "$first$last${String.format("%03d", counter++)}"
-        }
+        fun fromId(id: Int): Role? = entries.find { it.id == id }
+        fun fromName(name: String): Role? = entries.find { it.name.equals(name, ignoreCase = true) }
+    }
+}
+
+enum class Department(val id: Int) {
+    FINANCE(1),
+    LEADERSHIP(2),
+    IT(3),
+    ENGINEERING(4);
+
+    companion object {
+        fun fromId(id: Int): Department? = entries.find { it.id == id }
+        fun fromName(name: String): Department? = entries.find { it.name.equals(name, ignoreCase = true) }
     }
 }

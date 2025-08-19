@@ -1,41 +1,69 @@
 package dao
 
-import org.slf4j.LoggerFactory
+import org.jdbi.v3.core.Jdbi
+import java.util.UUID
 
-class EmployeeList : ArrayList<Employee>() {
+class EmployeeDao(private val jdbi: Jdbi) {
 
-    private val log = LoggerFactory.getLogger(EmployeeList::class.java)
-
-    override fun add(emp: Employee): Boolean {
-        if (this.any { it.id == emp.id }) {
-            log.warn("Attempt to add duplicate employee: id=${emp.id}")
-            return false
+    fun insert(emp: Employee): Int {
+        return jdbi.withHandle<Int, Exception> { handle ->
+            handle.createUpdate(
+                """
+                INSERT INTO employee (employee_id, first_name, last_name, role_id, department_id, reporting_to)
+                VALUES (:employeeId, :firstName, :lastName, :roleId, :departmentId, :reportingTo)
+                """
+            )
+                .bindBean(emp)
+                .execute()
         }
-        log.debug("Adding employee: $emp")
-        return super.add(emp)
     }
 
-    fun employeeExists(id: String): Boolean {
-        val exists = this.any { it.id == id }
-        log.debug("Employee exists check for $id: $exists")
-        return exists
-    }
-
-    fun getById(id: String): Employee? {
-        log.debug("Searching for employee with id=$id")
-        return this.find { it.id == id }
-    }
-
-    override fun toString(): String {
-        if (this.isEmpty()) {
-            log.debug("Employee list is empty")
-            return "No employees found."
+    fun getById(id: UUID): Employee? {
+        return jdbi.withHandle<Employee?, Exception> { handle ->
+            handle.createQuery(
+                """
+                SELECT employee_id AS "employeeId",
+                       first_name AS "firstName",
+                       last_name AS "lastName",
+                       role_id AS "roleId",
+                       department_id AS "departmentId",
+                       reporting_to AS "reportingTo"
+                FROM employee
+                WHERE employee_id = :id
+                """
+            )
+                .bind("id", id)
+                .mapTo(Employee::class.java)
+                .findOne()
+                .orElse(null)
         }
-        return this.joinToString("\n") { it.toString() }
     }
-}
-enum class Role {
-    CEO,
-    MANAGER,
-    DEVELOPER
+
+    fun getAll(limit: Int = 20): List<Employee> {
+        return jdbi.withHandle<List<Employee>, Exception> { handle ->
+            handle.createQuery(
+                """
+                SELECT employee_id AS "employeeId",
+                       first_name AS "firstName",
+                       last_name AS "lastName",
+                       role_id AS "roleId",
+                       department_id AS "departmentId",
+                       reporting_to AS "reportingTo"
+                FROM employee
+                LIMIT :limit
+                """
+            )
+                .bind("limit", limit)
+                .mapTo(Employee::class.java)
+                .list()
+        }
+    }
+
+    fun delete(id: UUID): Int {
+        return jdbi.withHandle<Int, Exception> { handle ->
+            handle.createUpdate("DELETE FROM employee WHERE employee_id = :id")
+                .bind("id", id)
+                .execute()
+        }
+    }
 }

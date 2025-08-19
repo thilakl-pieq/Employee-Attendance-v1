@@ -11,10 +11,9 @@ server:
 
 database:
   driverClass: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/postgres
   user: postgres
   password: postgres
-  url: jdbc:postgresql://localhost:5432/local_db
-
 
 logging:
   level: INFO

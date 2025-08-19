@@ -3,22 +3,25 @@ package service
 import BasicHealthCheck
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.databind.SerializationFeature
-import dao.EmployeeList
+import com.fasterxml.jackson.module.kotlin.kotlinModule
+import config.Configuration
 import dao.AttendanceList
+import dao.Employee
+import dao.EmployeeDao
 import io.dropwizard.client.JerseyClientBuilder
-import resources.EmployeeResource
-import resources.AttendanceResource
 import io.dropwizard.core.Application
 import io.dropwizard.core.setup.Bootstrap
 import io.dropwizard.core.setup.Environment
-import com.fasterxml.jackson.module.kotlin.kotlinModule
-import config.Configuration
-import jakarta.servlet.DispatcherType
+import io.dropwizard.jdbi3.JdbiFactory
 import org.eclipse.jetty.servlets.CrossOriginFilter
-import java.util.EnumSet
+import org.jdbi.v3.core.Jdbi
+import org.jdbi.v3.sqlobject.SqlObjectPlugin
+import org.jdbi.v3.core.kotlin.KotlinPlugin
+import resources.EmployeeResource
+import resources.AttendanceResource
+import java.util.*
 
 class AppMain : Application<Configuration>() {
-
     override fun initialize(bootstrap: Bootstrap<Configuration>) {
         bootstrap.objectMapper.registerModule(kotlinModule())
         bootstrap.objectMapper.registerModule(JavaTimeModule())
@@ -26,41 +29,36 @@ class AppMain : Application<Configuration>() {
     }
 
     override fun run(configuration: Configuration, environment: Environment) {
-        // Data lists
-        val employeeList = EmployeeList()
-        val attendanceList = AttendanceList()
+        // Setup JDBI
+        val factory = JdbiFactory()
+        val jdbi: Jdbi = factory.build(environment, configuration.database, "postgresql")
+        jdbi.installPlugin(SqlObjectPlugin())
+        jdbi.installPlugin(KotlinPlugin())
 
-        // Dropwizard HTTP client (for AttendanceService's employeeExists check)
-        val client = JerseyClientBuilder(environment)
-            .build("employee-api-client")
 
-        // Services
-        val employeeService = EmployeeService(employeeList)
-        val attendanceService = AttendanceService(attendanceList, client)
+        //Instead, create your DAO class by passing Jdbi into it:
+        val employeeDao = EmployeeDao(jdbi)
+        val employeeService = EmployeeService(employeeDao)
 
-        // Resources (pass services to them, not lists)
-        val employeeResource = EmployeeResource(employeeService)
-        val attendanceResource = AttendanceResource(attendanceService)
+        val client = JerseyClientBuilder(environment).build("employee-api-client")
+        val attendanceService = AttendanceService(AttendanceList(), client)
 
-        // Register resources with Dropwizard
-        environment.jersey().register(employeeResource)
-        environment.jersey().register(attendanceResource)
+        environment.jersey().register(EmployeeResource(employeeService))
+        environment.jersey().register(AttendanceResource(attendanceService))
 
-        // Basic health check
-        val basicHealthCheck = BasicHealthCheck()
-        environment.healthChecks().register("basic", basicHealthCheck)
+        environment.healthChecks().register("basic", BasicHealthCheck())
 
         val cors = environment.servlets().addFilter("CORS", CrossOriginFilter::class.java)
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "http://localhost:3000")  // Or "*" for all origins (less secure)
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "http://localhost:3000")
         cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin,Authorization")
         cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "OPTIONS,GET,PUT,POST,DELETE,HEAD")
         cors.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true")
-
-        // Map the filter to all URL patterns
-        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType::class.java), true, "/*")
+        cors.addMappingForUrlPatterns(EnumSet.allOf(jakarta.servlet.DispatcherType::class.java), true, "/*")
     }
+
 }
 
 fun main(args: Array<String>) {
     AppMain().run(*args)
+
 }
