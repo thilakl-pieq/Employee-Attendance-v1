@@ -99,13 +99,14 @@ class AttendanceDao(private val jdbi: Jdbi) {
     fun getWorkingHoursSummaryByDateRange(from: LocalDateTime, to: LocalDateTime): List<Map<String, Any>> {
         return jdbi.withHandle<List<Map<String, Any>>, Exception> { handle ->
             handle.createQuery("""
-            SELECT 
-                employee_id AS employeeId,
-                SUM(EXTRACT(EPOCH FROM (COALESCE(check_out_datetime, NOW()) - check_in_datetime)) / 3600) AS totalHours
+            SELECT  employee_id AS employeeId,
+                    SUM(EXTRACT(EPOCH FROM (check_out_datetime - check_in_datetime)) / 3600) AS totalHours
             FROM attendance
-            WHERE check_in_datetime >= :fromDate AND check_in_datetime <= :toDate
-              AND check_out_datetime IS NOT NULL
+            WHERE   check_in_datetime >= :fromDate 
+                    AND check_in_datetime <= :toDate
+                    AND check_out_datetime IS NOT NULL
             GROUP BY employee_id
+
         """)
                 .bind("fromDate", from)
                 .bind("toDate", to)

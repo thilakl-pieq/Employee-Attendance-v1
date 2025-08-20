@@ -26,6 +26,7 @@ class EmployeeService(
         if (deptId == null) {
             return Response.Status.BAD_REQUEST to mapOf("error" to "Invalid department '$department'")
         }
+
         val emp = Employee(
             firstName = firstName,
             lastName = lastName,
