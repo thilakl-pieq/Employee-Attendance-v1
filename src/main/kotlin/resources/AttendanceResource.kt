@@ -4,58 +4,113 @@ import model.CheckInRequest
 import model.CheckOutRequest
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.MediaType
 import service.AttendanceService
 import java.time.LocalDateTime
-import org.slf4j.LoggerFactory
-import java.time.format.DateTimeFormatter
 import java.util.UUID
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
 
 @Path("/attendance")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 class AttendanceResource(
     private val attendanceService: AttendanceService
 ) {
 
     private val log = LoggerFactory.getLogger(AttendanceResource::class.java)
 
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-
     @POST
-    @Path("/checkin/{id}")
-    fun checkIn(@PathParam("id") id: String, request: CheckInRequest): Response {
-        log.info("API /attendance/checkin called for $id")
+    @Path("/checkin")
+    fun checkIn(
+        @QueryParam("employee_id") employeeId: String?,
+        request: CheckInRequest
+    ): Response {
+        if (employeeId.isNullOrBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "Query parameter 'employee_id' is required"))
+                .build()
+        }
+
+        log.info("POST /attendance/checkIn called for employee")
+
         val uuid = try {
-            UUID.fromString(id)
+            UUID.fromString(employeeId)
         } catch (e: IllegalArgumentException) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(mapOf("error" to "Invalid UUID format for employee ID"))
                 .build()
         }
-        val (status, body) = attendanceService.checkIn(uuid, request.checkInDateTime)
-        return Response.status(status).entity(body).build()
+
+        return try {
+            val attendance = attendanceService.checkIn(uuid, request.checkInDateTime)
+            Response.status(Response.Status.CREATED).entity(attendance).build()
+        } catch (e: NotFoundException) {
+            Response.status(Response.Status.NOT_FOUND)
+                .entity(mapOf("error" to e.message))
+                .build()
+        } catch (e: BadRequestException) {
+            Response.status(Response.Status.CONFLICT)
+                .entity(mapOf("error" to e.message))
+                .build()
+        } catch (e: Exception) {
+            log.error("Error during check-in", e)
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Internal server error"))
+                .build()
+        }
     }
 
     @POST
-    @Path("/checkout/{id}")
-    fun checkOut(@PathParam("id") id: String, request: CheckOutRequest): Response {
-        log.info("API /attendance/checkout called for $id")
+    @Path("/checkout")
+    fun checkOut(
+        @QueryParam("employee_id") employeeId: String?,
+        request: CheckOutRequest
+    ): Response {
+        if (employeeId.isNullOrBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "Query parameter 'employee_id' is required"))
+                .build()
+        }
+
+        log.info("POST /attendance/checkout called for employee_id=$employeeId")
+
         val uuid = try {
-            UUID.fromString(id)
+            UUID.fromString(employeeId)
         } catch (e: IllegalArgumentException) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(mapOf("error" to "Invalid UUID format for employee ID"))
                 .build()
         }
-        val (status, body) = attendanceService.checkOut(uuid, request.checkOutDateTime)
-        return Response.status(status).entity(body).build()
+
+        return try {
+            attendanceService.checkOut(uuid, request.checkOutDateTime)
+            Response.ok(mapOf("message" to "Check-out successful")).build()
+        } catch (e: NotFoundException) {
+            Response.status(Response.Status.NOT_FOUND)
+                .entity(mapOf("error" to e.message))
+                .build()
+        } catch (e: BadRequestException) {
+            Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to e.message))
+                .build()
+        } catch (e: Exception) {
+            log.error("Error during check-out", e)
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Internal server error"))
+                .build()
+        }
     }
+
 
     @GET
-    @Path("/all")
     fun getAllAttendance(@QueryParam("limit") @DefaultValue("20") limit: Int): Response {
-        log.debug("API /attendance/all called with limit=$limit")
+        log.debug("GET /attendance/all called with limit=$limit")
         val list = attendanceService.getAllAttendances(limit)
         return Response.ok(list).build()
     }
+
     @GET
     @Path("/summary")
     fun getAttendanceSummary(
@@ -71,7 +126,7 @@ class AttendanceResource(
         }
 
         val fromDate: LocalDateTime = try {
-            LocalDateTime.parse(from) // ISO format parsing
+            LocalDateTime.parse(from)
         } catch (e: Exception) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(mapOf("error" to "Invalid 'from' datetime format, expected ISO 8601 format like yyyy-MM-dd'T'HH:mm:ss"))
@@ -79,14 +134,25 @@ class AttendanceResource(
         }
 
         val toDate: LocalDateTime = try {
-            LocalDateTime.parse(to) // ISO format parsing
+            LocalDateTime.parse(to)
         } catch (e: Exception) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(mapOf("error" to "Invalid 'to' datetime format, expected ISO 8601 format like yyyy-MM-dd'T'HH:mm:ss"))
                 .build()
         }
 
-        val (status, body) = attendanceService.getWorkingHoursSummary(fromDate, toDate)
-        return Response.status(status).entity(body).build()
+        return try {
+            val summary = attendanceService.getWorkingHoursSummary(fromDate, toDate)
+            Response.ok(summary).build()
+        } catch (e: BadRequestException) {
+            Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to e.message))
+                .build()
+        } catch (e: Exception) {
+            log.error("Error fetching attendance summary", e)
+            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(mapOf("error" to "Internal server error"))
+                .build()
+        }
     }
 }
