@@ -7,8 +7,6 @@ import jakarta.ws.rs.core.Response
 import model.EmployeeRequest
 import model.LoginRequest
 import service.EmployeeService
-import dao.Role
-import dao.Department
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -23,28 +21,14 @@ class EmployeeResource(private val employeeService: EmployeeService) {
     fun addEmployee(@Valid request: EmployeeRequest): Response {
         log.info("POST /employees called with request: $request")
 
-        val roleEnum = Role.fromName(request.role.trim())
-        if (roleEnum == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Invalid role '${request.role}'"))
-                .build()
-        }
-
-        val departmentEnum = Department.fromName(request.department.trim())
-        if (departmentEnum == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "Invalid department '${request.department}'"))
-                .build()
-        }
-
-        // reportingTo stays as String? directly without UUID conversion
+        // No enums here, just pass strings as-is
         val reportingToId = request.reportingto?.takeIf { it.isNotBlank() }
 
         val (status, body) = employeeService.addEmployee(
             firstName = request.firstname.trim(),
             lastName = request.lastname.trim(),
-            role = roleEnum,
-            department = departmentEnum,
+            role = request.role.trim(),
+            department = request.department.trim(),
             reportingTo = reportingToId
         )
 

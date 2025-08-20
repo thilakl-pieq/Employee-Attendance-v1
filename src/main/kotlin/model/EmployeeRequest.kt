@@ -2,7 +2,6 @@ package model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Pattern
 
 data class EmployeeRequest(
 
@@ -13,10 +12,10 @@ data class EmployeeRequest(
     val lastname: String,
 
     @get:NotBlank(message = "Role is required")
-    val role: String,  // Will be mapped to Role enum
+    val role: String,  // as string
 
     @get:NotBlank(message = "Department is required")
-    val department: String,  // Will be mapped to Department enum
+    val department: String,  // as string
 
     val reportingto: String? = null
 )

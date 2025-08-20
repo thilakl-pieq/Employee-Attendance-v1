@@ -2,8 +2,6 @@ package service
 
 import dao.Employee
 import dao.EmployeeDao
-import dao.Role
-import dao.Department
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import java.util.UUID
@@ -16,18 +14,25 @@ class EmployeeService(
     fun addEmployee(
         firstName: String,
         lastName: String,
-        role: Role,
-        department: Department,
-        reportingTo: String?  // nullable string for reportingTo
+        role: String,
+        department: String,
+        reportingTo: String? = null
     ): Pair<Response.Status, Any> {
+        val roleId = employeeDao.getRoleIdByName(role.trim())
+        if (roleId == null) {
+            return Response.Status.BAD_REQUEST to mapOf("error" to "Invalid role '$role'")
+        }
+        val deptId = employeeDao.getDepartmentIdByName(department.trim())
+        if (deptId == null) {
+            return Response.Status.BAD_REQUEST to mapOf("error" to "Invalid department '$department'")
+        }
         val emp = Employee(
             firstName = firstName,
             lastName = lastName,
-            roleId = role.id,
-            departmentId = department.id,
+            roleId = roleId,
+            departmentId = deptId,
             reportingTo = reportingTo
-        ) // ID auto-generated inside Employee class
-
+        )
         return try {
             employeeDao.insert(emp)
             log.info("Employee added successfully id=${emp.employeeId}")
@@ -60,12 +65,10 @@ class EmployeeService(
 
     fun login(employeeId: UUID, password: String): Pair<Response.Status, Any> {
         val emp = employeeDao.getById(employeeId)
-        return if (emp == null) {
-            Response.Status.NOT_FOUND to mapOf("error" to "Employee not found")
-        } else if (password != "password123") { // Replace with actual authentication
-            Response.Status.UNAUTHORIZED to mapOf("error" to "Invalid credentials")
-        } else {
-            Response.Status.OK to emp
+        return when {
+            emp == null -> Response.Status.NOT_FOUND to mapOf("error" to "Employee not found")
+            password != "password123" -> Response.Status.UNAUTHORIZED to mapOf("error" to "Invalid credentials")
+            else -> Response.Status.OK to emp
         }
     }
 }

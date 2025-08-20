@@ -8,6 +8,7 @@ import service.AttendanceService
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Path("/attendance")
 class AttendanceResource(
@@ -16,11 +17,20 @@ class AttendanceResource(
 
     private val log = LoggerFactory.getLogger(AttendanceResource::class.java)
 
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
     @POST
     @Path("/checkin/{id}")
     fun checkIn(@PathParam("id") id: String, request: CheckInRequest): Response {
         log.info("API /attendance/checkin called for $id")
-        val (status, body) = attendanceService.checkIn(id, request.checkInDateTime)
+        val uuid = try {
+            UUID.fromString(id)
+        } catch (e: IllegalArgumentException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "Invalid UUID format for employee ID"))
+                .build()
+        }
+        val (status, body) = attendanceService.checkIn(uuid, request.checkInDateTime)
         return Response.status(status).entity(body).build()
     }
 
@@ -28,7 +38,14 @@ class AttendanceResource(
     @Path("/checkout/{id}")
     fun checkOut(@PathParam("id") id: String, request: CheckOutRequest): Response {
         log.info("API /attendance/checkout called for $id")
-        val (status, body) = attendanceService.checkOut(id, request.checkOutDateTime)
+        val uuid = try {
+            UUID.fromString(id)
+        } catch (e: IllegalArgumentException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "Invalid UUID format for employee ID"))
+                .build()
+        }
+        val (status, body) = attendanceService.checkOut(uuid, request.checkOutDateTime)
         return Response.status(status).entity(body).build()
     }
 
@@ -36,41 +53,40 @@ class AttendanceResource(
     @Path("/all")
     fun getAllAttendance(@QueryParam("limit") @DefaultValue("20") limit: Int): Response {
         log.debug("API /attendance/all called with limit=$limit")
-        val list = attendanceService.getAllAttendances().take(limit)
+        val list = attendanceService.getAllAttendances(limit)
         return Response.ok(list).build()
     }
-
     @GET
     @Path("/summary")
-    fun getSummary(
-        @QueryParam("to") toStr: String?,
-        @QueryParam("from") fromStr: String?
+    fun getAttendanceSummary(
+        @QueryParam("from") from: String?,
+        @QueryParam("to") to: String?
     ): Response {
-        if (fromStr == null || toStr == null) {
+        log.info("API /attendance/summary called: from=$from, to=$to")
+
+        if (from.isNullOrBlank() || to.isNullOrBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "`from` and `to` query params are required in format yyyy-MM-ddTHH:mm"))
+                .entity(mapOf("error" to "Both 'from' and 'to' query parameters are required in ISO 8601 format, e.g. yyyy-MM-dd'T'HH:mm:ss"))
                 .build()
         }
 
-        // Parse to LocalDateTime
-        val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME // or a custom pattern if your format differs
-        val from = try {
-            LocalDateTime.parse(fromStr, formatter)
+        val fromDate: LocalDateTime = try {
+            LocalDateTime.parse(from) // ISO format parsing
         } catch (e: Exception) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "`from` query param is not a valid date-time"))
-                .build()
-        }
-        val to = try {
-            LocalDateTime.parse(toStr, formatter)
-        } catch (e: Exception) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(mapOf("error" to "`to` query param is not a valid date-time"))
+                .entity(mapOf("error" to "Invalid 'from' datetime format, expected ISO 8601 format like yyyy-MM-dd'T'HH:mm:ss"))
                 .build()
         }
 
-        val (status, body) = attendanceService.getAttendanceBySummary(from, to)
+        val toDate: LocalDateTime = try {
+            LocalDateTime.parse(to) // ISO format parsing
+        } catch (e: Exception) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(mapOf("error" to "Invalid 'to' datetime format, expected ISO 8601 format like yyyy-MM-dd'T'HH:mm:ss"))
+                .build()
+        }
+
+        val (status, body) = attendanceService.getWorkingHoursSummary(fromDate, toDate)
         return Response.status(status).entity(body).build()
     }
-
 }

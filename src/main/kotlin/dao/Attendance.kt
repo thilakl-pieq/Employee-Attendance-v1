@@ -6,12 +6,13 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 data class Attendance(
 
     @get:NotBlank(message = "Employee ID cannot be blank")
     @get:JsonProperty("id")
-    val id: String,
+    val employeeId: UUID,
 
     @get:NotNull(message = "Check-in date and time is required")
     @get:JsonProperty("checkInDateTime")
@@ -22,13 +23,12 @@ data class Attendance(
     @get:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     var checkOutDateTime: LocalDateTime? = null,
 
-    @get:JsonProperty("workingHours")
-    var workingHours: String = ""
+
 ) {
     override fun toString(): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val checkInStr = checkInDateTime.format(formatter)
         val checkOutStr = checkOutDateTime?.format(formatter) ?: "Not Checked Out"
-        return "ID: $id | Check-in: $checkInStr | Check-out: $checkOutStr | Hours: $workingHours"
+        return "ID: $employeeId | Check-in: $checkInStr | Check-out: $checkOutStr"
     }
 }

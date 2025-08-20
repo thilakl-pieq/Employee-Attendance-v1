@@ -29,31 +29,7 @@ data class Employee(
     @JsonProperty("reporting_to")
     val reportingTo: String? = null
 ) {
-
     override fun toString(): String {
         return "Employee(employeeId=$employeeId, firstName='$firstName', lastName='$lastName', roleId=$roleId, departmentId=$departmentId, reportingTo=$reportingTo)"
-    }
-}
-
-enum class Role(val id: Int) {
-    CEO(1),
-    MANAGER(2),
-    DEVELOPER(3);
-
-    companion object {
-        fun fromId(id: Int): Role? = entries.find { it.id == id }
-        fun fromName(name: String): Role? = entries.find { it.name.equals(name, ignoreCase = true) }
-    }
-}
-
-enum class Department(val id: Int) {
-    FINANCE(1),
-    LEADERSHIP(2),
-    IT(3),
-    ENGINEERING(4);
-
-    companion object {
-        fun fromId(id: Int): Department? = entries.find { it.id == id }
-        fun fromName(name: String): Department? = entries.find { it.name.equals(name, ignoreCase = true) }
     }
 }

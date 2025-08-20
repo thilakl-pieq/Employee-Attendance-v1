@@ -5,8 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import config.Configuration
-import dao.AttendanceList
-import dao.Employee
+import dao.AttendanceDao
 import dao.EmployeeDao
 import io.dropwizard.client.JerseyClientBuilder
 import io.dropwizard.core.Application
@@ -39,9 +38,11 @@ class AppMain : Application<Configuration>() {
         //Instead, create your DAO class by passing Jdbi into it:
         val employeeDao = EmployeeDao(jdbi)
         val employeeService = EmployeeService(employeeDao)
+        val attendanceDao = AttendanceDao(jdbi)
+//        val attendanceService = AttendanceDao(attendanceDao)
 
         val client = JerseyClientBuilder(environment).build("employee-api-client")
-        val attendanceService = AttendanceService(AttendanceList(), client)
+        val attendanceService = AttendanceService(attendanceDao, client)
 
         environment.jersey().register(EmployeeResource(employeeService))
         environment.jersey().register(AttendanceResource(attendanceService))

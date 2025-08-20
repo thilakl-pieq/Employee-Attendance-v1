@@ -66,4 +66,26 @@ class EmployeeDao(private val jdbi: Jdbi) {
                 .execute()
         }
     }
+
+    // Get role ID by role name
+    fun getRoleIdByName(roleName: String): Int? {
+        return jdbi.withHandle<Int?, Exception> { handle ->
+            handle.createQuery("SELECT role_id FROM roles WHERE LOWER(role_value) = LOWER(:roleName)")
+                .bind("roleName", roleName)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(null)
+        }
+    }
+
+    // Get department ID by department name
+    fun getDepartmentIdByName(deptName: String): Int? {
+        return jdbi.withHandle<Int?, Exception> { handle ->
+            handle.createQuery("SELECT department_id FROM departments WHERE LOWER(department_name) = LOWER(:deptName)")
+                .bind("deptName", deptName)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(null)
+        }
+    }
 }
