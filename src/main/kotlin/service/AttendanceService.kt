@@ -24,11 +24,6 @@ class AttendanceService(
         return exists
     }
 
-    /**
-     * Attempts check-in for an employee at the provided date and time.
-     * @throws NotFoundException if employee does not exist
-     * @throws BadRequestException if employee already checked-in at that time or has an open attendance record
-     */
     fun checkIn(employeeId: UUID, checkInDateTime: LocalDateTime): Attendance {
         log.info("Attempting check-in for $employeeId at $checkInDateTime")
         if (!employeeExists(employeeId)) {
@@ -49,11 +44,6 @@ class AttendanceService(
         return attendance
     }
 
-    /**
-     * Attempts check-out for employee at the provided date and time.
-     * @throws NotFoundException if employee does not exist or no open attendance record
-     * @throws BadRequestException if check-out time is before check-in time
-     */
     fun checkOut(employeeId: UUID, checkOutDateTime: LocalDateTime) {
         log.info("Attempting check-out for $employeeId at $checkOutDateTime")
         if (!employeeExists(employeeId)) {
@@ -76,18 +66,11 @@ class AttendanceService(
         log.info("Check-out successful for $employeeId at $checkOutDateTime")
     }
 
-    /**
-     * Returns all attendance records with an optional limit.
-     */
     fun getAllAttendances(limit: Int): List<Attendance> {
         log.info("Fetching all attendances with limit $limit")
         return attendanceDao.getAllAttendance(limit)
     }
 
-    /**
-     * Returns working hours summary between given from and to date.
-     * @throws BadRequestException on error retrieving summary
-     */
     fun getWorkingHoursSummary(from: LocalDateTime, to: LocalDateTime): List<Map<String, Any>> {
         log.info("Fetching working hours summary from $from to $to")
         try {

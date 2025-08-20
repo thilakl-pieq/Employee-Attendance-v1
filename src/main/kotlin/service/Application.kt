@@ -35,7 +35,6 @@ class AppMain : Application<Configuration>() {
         jdbi.installPlugin(KotlinPlugin())
 
 
-        //Instead, create your DAO class by passing Jdbi into it:
         val employeeDao = EmployeeDao(jdbi)
         val employeeService = EmployeeService(employeeDao)
         val attendanceDao = AttendanceDao(jdbi)

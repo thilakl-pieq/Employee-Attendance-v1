@@ -12,11 +12,6 @@ class EmployeeService(
 ) {
     private val log = LoggerFactory.getLogger(EmployeeService::class.java)
 
-    /**
-     * Adds a new employee after validating the role and department.
-     * @throws BadRequestException if role or department is invalid
-     * @throws Exception on insert failure
-     */
     fun addEmployee(
         firstName: String,
         lastName: String,
@@ -46,23 +41,12 @@ class EmployeeService(
         }
     }
 
-    /**
-     * Retrieves an employee by UUID.
-     * @throws NotFoundException if employee not found
-     */
     fun getEmployee(id: UUID): Employee {
         return employeeDao.getById(id) ?: throw NotFoundException("Employee not found")
     }
 
-    /**
-     * Returns a list of employees with optional limit.
-     */
     fun getAllEmployees(limit: Int = 20): List<Employee> = employeeDao.getAll(limit)
 
-    /**
-     * Deletes an employee by UUID.
-     * @throws NotFoundException if employee not found
-     */
     fun deleteEmployee(id: UUID) {
         val deleted = employeeDao.delete(id)
         if (deleted == 0) {
@@ -71,11 +55,6 @@ class EmployeeService(
         log.info("Employee deleted successfully id=$id")
     }
 
-    /**
-     * Simulates a login by checking employee existence and password.
-     * @throws NotFoundException if employee not found
-     * @throws BadRequestException if credentials are invalid
-     */
     fun login(employeeId: UUID, password: String): Employee {
         val emp = employeeDao.getById(employeeId) ?: throw NotFoundException("Employee not found")
         if (password != "password123") {

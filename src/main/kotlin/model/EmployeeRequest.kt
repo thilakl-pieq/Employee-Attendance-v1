@@ -12,10 +12,10 @@ data class EmployeeRequest(
     val lastname: String,
 
     @get:NotBlank(message = "Role is required")
-    val role: String,  // as string
+    val role: String,
 
     @get:NotBlank(message = "Department is required")
-    val department: String,  // as string
+    val department: String,
     @get:NotBlank(message = "reporting to id is required")
     val reportingto: String? = null
 )
