@@ -9,7 +9,8 @@ class AttendanceDao(private val jdbi: Jdbi) {
 
     private val log = LoggerFactory.getLogger(AttendanceDao::class.java)
 
-    fun insert(attendance: Attendance): Int {
+    fun addEmployeeD(attendance: Attendance): Int {
+        log.info("Inserting attendance record into db from dao layer")
         return jdbi.withHandle<Int, Exception> { handle ->
             handle.createUpdate("""
                 INSERT INTO attendance (employee_id, check_in_datetime, check_out_datetime) 
@@ -21,6 +22,7 @@ class AttendanceDao(private val jdbi: Jdbi) {
     }
 
     fun hasAlreadyCheckedIn(employeeId: UUID, checkInDateTime: LocalDateTime): Boolean {
+        log.info("Checking if already checkedIn from dao layer")
         return jdbi.withHandle<Boolean, Exception> { handle ->
             val count = handle.createQuery("""
                 SELECT COUNT(*) 
@@ -36,6 +38,7 @@ class AttendanceDao(private val jdbi: Jdbi) {
     }
 
     fun hasAlreadyCheckedOut(employeeId: UUID, checkInDateTime: LocalDateTime): Boolean {
+        log.info("Checking if already checkOut from dao layer")
         return jdbi.withHandle<Boolean, Exception> { handle ->
             val count = handle.createQuery("""
                 SELECT COUNT(*) 
