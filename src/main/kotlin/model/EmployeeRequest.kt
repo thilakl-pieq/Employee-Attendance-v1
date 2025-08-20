@@ -16,7 +16,7 @@ data class EmployeeRequest(
 
     @get:NotBlank(message = "Department is required")
     val department: String,  // as string
-
+    @get:NotBlank(message = "reporting to id is required")
     val reportingto: String? = null
 )
 data class LoginRequest(

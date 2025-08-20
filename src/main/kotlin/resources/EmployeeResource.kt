@@ -20,10 +20,9 @@ class EmployeeResource(private val employeeService: EmployeeService) {
     @POST
     fun addEmployee(@Valid request: EmployeeRequest): Response {
         log.info("POST /employees called with request: $request")
-
+        log.info("${request.reportingto}")
         // No enums here, just pass strings as-is
         val reportingToId = request.reportingto?.takeIf { it.isNotBlank() }
-
         val (status, body) = employeeService.addEmployee(
             firstName = request.firstname.trim(),
             lastName = request.lastname.trim(),

@@ -38,7 +38,7 @@ class AttendanceService(
         }
 
         val attendance = Attendance(employeeId, checkInDateTime, null)
-        attendanceDao.insert(attendance)
+        attendanceDao.insertAttendance(attendance)
 
         log.info("Check-in successful for $employeeId at $checkInDateTime")
         return Response.Status.CREATED to attendance

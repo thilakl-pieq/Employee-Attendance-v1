@@ -5,7 +5,7 @@ import java.util.UUID
 
 class EmployeeDao(private val jdbi: Jdbi) {
 
-    fun insert(emp: Employee): Int {
+    fun insertEmployee(emp: Employee): Int {
         return jdbi.withHandle<Int, Exception> { handle ->
             handle.createUpdate(
                 """

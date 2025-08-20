@@ -34,7 +34,7 @@ class EmployeeService(
             reportingTo = reportingTo
         )
         return try {
-            employeeDao.insert(emp)
+            employeeDao.insertEmployee(emp)
             log.info("Employee added successfully id=${emp.employeeId}")
             Response.Status.CREATED to emp
         } catch (e: Exception) {

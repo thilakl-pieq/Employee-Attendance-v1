@@ -9,7 +9,7 @@ class AttendanceDao(private val jdbi: Jdbi) {
 
     private val log = LoggerFactory.getLogger(AttendanceDao::class.java)
 
-    fun addEmployeeD(attendance: Attendance): Int {
+    fun insertAttendance(attendance: Attendance): Int {
         log.info("Inserting attendance record into db from dao layer")
         return jdbi.withHandle<Int, Exception> { handle ->
             handle.createUpdate("""
