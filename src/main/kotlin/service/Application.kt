@@ -18,7 +18,7 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin
 import org.jdbi.v3.core.kotlin.KotlinPlugin
 import resources.EmployeeResource
 import resources.AttendanceResource
-import java.util.*
+import java.util.EnumSet
 
 class AppMain : Application<Configuration>() {
     override fun initialize(bootstrap: Bootstrap<Configuration>) {
@@ -31,7 +31,6 @@ class AppMain : Application<Configuration>() {
         // Setup JDBI
         val factory = JdbiFactory()
         val jdbi: Jdbi = factory.build(environment, configuration.database, "postgresql")
-        jdbi.installPlugin(SqlObjectPlugin())
         jdbi.installPlugin(KotlinPlugin())
 
 
@@ -46,7 +45,7 @@ class AppMain : Application<Configuration>() {
         environment.jersey().register(EmployeeResource(employeeService))
         environment.jersey().register(AttendanceResource(attendanceService))
 
-        environment.healthChecks().register("basic", BasicHealthCheck())
+        environment.healthChecks().register("basic", BasicHealthCheck(jdbi))
 
         val cors = environment.servlets().addFilter("CORS", CrossOriginFilter::class.java)
         cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "http://localhost:3000")

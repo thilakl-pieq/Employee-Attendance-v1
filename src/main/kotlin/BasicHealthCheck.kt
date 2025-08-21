@@ -1,11 +1,24 @@
 import com.codahale.metrics.health.HealthCheck
+import org.jdbi.v3.core.Jdbi
 
-class BasicHealthCheck : HealthCheck() {
+class BasicHealthCheck(private val jdbi: Jdbi) : HealthCheck() {
 
     override fun check(): Result {
-        // Simple health check logic, always healthy here
-        return Result.healthy()
-
-        // You could add checks like DB connectivity, service availability here and return Result.unhealthy(...) if any problem
+        return try {
+            // Simple query to verify DB connectivity and responsiveness
+            jdbi.withHandle<Int, Exception> { handle ->
+                handle.createQuery("SELECT 1")
+                    .mapTo(Int::class.java)
+                    .one()
+            }.let {
+                if (it == 1) {
+                    Result.healthy()
+                } else {
+                    Result.unhealthy("Unexpected result from DB health check query")
+                }
+            }
+        } catch (e: Exception) {
+            Result.unhealthy("Database connectivity failed: ${e.message}")
+        }
     }
 }
